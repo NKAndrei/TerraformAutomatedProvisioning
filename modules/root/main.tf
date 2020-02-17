@@ -1,5 +1,6 @@
 module "networking" {
     source = "../networking"
+    instance_id = "${module.instances.instance_id}"
 }
 module "instances" {
     source = "../instances"

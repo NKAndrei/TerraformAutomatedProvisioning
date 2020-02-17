@@ -22,6 +22,15 @@ resource "aws_subnet" "main_vpc_subnet" {
     tags = {
         Name = "Andrei_Main_VPC_Subnet"
     }
+    availability_zone = "eu-west-1a"
+}
+resource "aws_subnet" "main_vpc_subnet2" {
+    vpc_id = "${aws_vpc.main_vpc.id}"
+    cidr_block = "172.16.2.0/24"
+    tags = {
+        Name = "Andrei_Main_VPC_Subnet2"
+    }
+    availability_zone = "eu-west-1b"
 }
 
 resource "aws_route_table" "main_rt" {
@@ -64,27 +73,42 @@ resource "aws_security_group" "main_sg" {
     }
 }
 
-
-resource "aws_elb" "main_elb" {
+# ---- Load Balancer
+resource "aws_lb" "main_lb" {
     name = "Andrei-Main-ELB"
-    availability_zones = ["eu-west-1a", "eu-west-1b"]
+    internal = false
+    subnets = ["${aws_subnet.main_vpc_subnet.id}","${aws_subnet.main_vpc_subnet2.id}"]
+    security_groups = ["${aws_security_group.main_sg.id}"]
     
-    listener {
-        instance_port = 3000
-        instance_protocol = "http"
-        lb_port = 80
-        lb_protocol = "http"
+    tags = {
+        Name = "Andrei-Main-ELB"
     }
 }
 
-#resource "aws_lb_target_group" "main_tg" {
-#    name = "Andrei_Main_TG"
-#    port = 
-#    protocol = "HTTP"
-#    vpc_id = "${aws_vpc.main_vpc.id}"
-#}
+# ---- Load Balancer and Target Group connection
+resource "aws_lb_listener" "main_lb_listener" {
+    load_balancer_arn = "${aws_lb.main_lb.arn}"
+    port = "80"
+    protocol = "HTTP"
+    
+    default_action {
+        type = "forward"
+        target_group_arn = "${aws_lb_target_group.main_tg.arn}"    
+        
+    }
+}
 
-#resource "aws_lb_target_group_attachment" "main_tg_attachment" {
-#    target_group_arn = ""
-#    target_id = ""
-#}
+# ---- Target Group
+resource "aws_lb_target_group" "main_tg" {
+    name = "Andrei-Main-TG"
+    port = 80
+    protocol = "HTTP"
+    vpc_id = "${aws_vpc.main_vpc.id}"
+}
+
+# ---- Target Group and Instance connection
+resource "aws_lb_target_group_attachment" "main_tg_attachment" {
+    target_group_arn = "${aws_lb_target_group.main_tg.arn}"
+    target_id = "${var.instance_id}"
+    port = 8080
+}

@@ -21,7 +21,11 @@ resource "aws_instance" "web_instance" {
         inline = [
             "echo hello world",
             "sudo yum -y install git",
-            "echo hello world"
+            "echo hello world",
+            "sudo yum -y install docker",
+            "sudo systemctl start docker",
+            "sudo docker pull nginx",
+            "sudo docker run --name some-nginx -d -p 8080:80 nginx:latest"
         ]
         connection {
             type = "ssh"
