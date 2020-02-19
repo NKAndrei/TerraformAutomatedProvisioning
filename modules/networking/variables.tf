@@ -11,5 +11,5 @@ variable "main_route_igw_cidr" {
 }
 
 variable "instance_id" {
-    default = ""
+    type = "list"
 }

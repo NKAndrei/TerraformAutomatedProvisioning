@@ -108,7 +108,8 @@ resource "aws_lb_target_group" "main_tg" {
 
 # ---- Target Group and Instance connection
 resource "aws_lb_target_group_attachment" "main_tg_attachment" {
+    count = 2
     target_group_arn = "${aws_lb_target_group.main_tg.arn}"
-    target_id = "${var.instance_id}"
+    target_id = "${var.instance_id[count.index]}"
     port = 8080
 }
